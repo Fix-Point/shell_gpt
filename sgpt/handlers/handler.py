@@ -86,8 +86,6 @@ class Handler:
     def get_completion(
         self,
         model: str,
-        temperature: float,
-        top_p: float,
         messages: List[Dict[str, Any]],
         functions: Optional[List[Dict[str, str]]],
     ) -> Generator[str, None, None]:
@@ -105,8 +103,6 @@ class Handler:
 
         response = completion(
             model=model,
-            temperature=temperature,
-            top_p=top_p,
             messages=messages,
             stream=True,
             **additional_kwargs,
@@ -130,8 +126,6 @@ class Handler:
                     yield from self.handle_function_call(messages, name, arguments)
                     yield from self.get_completion(
                         model=model,
-                        temperature=temperature,
-                        top_p=top_p,
                         messages=messages,
                         functions=functions,
                         caching=False,
@@ -146,8 +140,6 @@ class Handler:
         self,
         prompt: str,
         model: str,
-        temperature: float,
-        top_p: float,
         caching: bool,
         functions: Optional[List[Dict[str, str]]] = None,
         **kwargs: Any,
@@ -156,8 +148,6 @@ class Handler:
         messages = self.make_messages(prompt.strip())
         generator = self.get_completion(
             model=model,
-            temperature=temperature,
-            top_p=top_p,
             messages=messages,
             functions=functions,
             caching=caching,

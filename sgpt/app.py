@@ -33,18 +33,6 @@ def main(
         cfg.get("DEFAULT_MODEL"),
         help="Large language model to use.",
     ),
-    temperature: float = typer.Option(
-        0.0,
-        min=0.0,
-        max=2.0,
-        help="Randomness of generated output.",
-    ),
-    top_p: float = typer.Option(
-        1.0,
-        min=0.0,
-        max=1.0,
-        help="Limits highest probable tokens (words).",
-    ),
     md: bool = typer.Option(
         cfg.get("PRETTIFY_MARKDOWN") == "true",
         help="Prettify markdown output.",
@@ -212,8 +200,6 @@ def main(
         ReplHandler(repl, role_class, md).handle(
             init_prompt=prompt,
             model=model,
-            temperature=temperature,
-            top_p=top_p,
             caching=cache,
             functions=function_schemas,
         )
@@ -222,8 +208,6 @@ def main(
         full_completion = ChatHandler(chat, role_class, md).handle(
             prompt=prompt,
             model=model,
-            temperature=temperature,
-            top_p=top_p,
             caching=cache,
             functions=function_schemas,
         )
@@ -231,8 +215,6 @@ def main(
         full_completion = DefaultHandler(role_class, md).handle(
             prompt=prompt,
             model=model,
-            temperature=temperature,
-            top_p=top_p,
             caching=cache,
             functions=function_schemas,
         )
@@ -252,8 +234,6 @@ def main(
             DefaultHandler(DefaultRoles.DESCRIBE_SHELL.get_role(), md).handle(
                 full_completion,
                 model=model,
-                temperature=temperature,
-                top_p=top_p,
                 caching=cache,
                 functions=function_schemas,
             )
