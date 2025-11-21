@@ -103,6 +103,8 @@ class Handler:
             additional_kwargs["tools"] = functions
             additional_kwargs["parallel_tool_calls"] = False
 
+        additional_kwargs["extra_headers"] = {"X-Model-Provider-ID": "openai_api_compatible" }
+
         response = completion(
             model=model,
             temperature=temperature,
@@ -114,31 +116,32 @@ class Handler:
 
         try:
             for chunk in response:
-                delta = chunk.choices[0].delta
-
-                # LiteLLM uses dict instead of Pydantic object like OpenAI does.
-                tool_calls = (
-                    delta.get("tool_calls") if use_litellm else delta.tool_calls
-                )
-                if tool_calls:
-                    for tool_call in tool_calls:
-                        if tool_call.function.name:
-                            name = tool_call.function.name
-                        if tool_call.function.arguments:
-                            arguments += tool_call.function.arguments
-                if chunk.choices[0].finish_reason == "tool_calls":
-                    yield from self.handle_function_call(messages, name, arguments)
-                    yield from self.get_completion(
-                        model=model,
-                        temperature=temperature,
-                        top_p=top_p,
-                        messages=messages,
-                        functions=functions,
-                        caching=False,
+                if len(chunk.choices) != 0:
+                    delta = chunk.choices[0].delta
+                    # LiteLLM uses dict instead of Pydantic object like OpenAI does.
+                    tool_calls = (
+                        delta.get("tool_calls") if use_litellm else delta.tool_calls
                     )
-                    return
-
-                yield delta.content or ""
+                    if tool_calls:
+                        for tool_call in tool_calls:
+                            if tool_call.function.name:
+                                name = tool_call.function.name
+                            if tool_call.function.arguments:
+                                arguments += tool_call.function.arguments
+                    if chunk.choices[0].finish_reason == "tool_calls":
+                        yield from self.handle_function_call(messages, name, arguments)
+                        yield from self.get_completion(
+                            model=model,
+                            temperature=temperature,
+                            top_p=top_p,
+                            messages=messages,
+                            functions=functions,
+                            caching=False,
+                        )
+                        return
+                    yield delta.content or ""
+                else:
+                    yield ""
         except KeyboardInterrupt:
             response.close()
 
